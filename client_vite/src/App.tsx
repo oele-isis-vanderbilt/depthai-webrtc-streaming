@@ -131,14 +131,34 @@ const WebRTCControls: React.FC = () => {
                 {/* <button id="ping" onClick={() => sendMessage({ type: 'ping' })}>Ping</button> */}
             </div>
 
-            <div>
-                <h3>RGB Stream</h3>
-                <video id="rgbVideo" autoPlay playsInline width={1920} height={1080}></video>
-            </div>
+            <div className="flex flex-row space-x-4 justify-center items-center">
+                <div className="flex flex-col items-center">
+                    <h3 className="mb-2 text-lg font-semibold">RGB Stream</h3>
+                    <video 
+                        id="rgbVideo" 
+                        autoPlay 
+                        playsInline 
+                        // width={640} 
+                        // height={360}
+                        width={1024}
+                        height={576}
+                        className="rounded-lg shadow-md"
+                    />
+                </div>
 
-            <div>
-                <h3>Depth Stream</h3>
-                <video id="depthVideo" autoPlay playsInline width={1920} height={1080}></video>
+                <div className="flex flex-col items-center">
+                    <h3 className="mb-2 text-lg font-semibold">Depth Stream</h3>
+                    <video 
+                        id="depthVideo" 
+                        autoPlay 
+                        playsInline 
+                        // width={640} 
+                        // height={360}
+                        width={1024}
+                        height={576}
+                        className="rounded-lg shadow-md"
+                    />
+                </div>
             </div>
         </div>
     );
