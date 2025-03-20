@@ -3,58 +3,25 @@ import json
 import logging
 import uuid
 from pathlib import Path
-from typing import Any, Optional
 
 from aiohttp import web
-import aiortc
 from aiortc import RTCPeerConnection, RTCSessionDescription
 
 from datachannel import setup_datachannel
 from transformators import DepthAIVideoTransformTrack, DepthAIDepthVideoTransformTrack
-# from old_transformators import DepthAIVideoTransformTrack, DepthAIDepthVideoTransformTrack
 import aiohttp_cors
 import depthai as dai
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("pc")
 
-def aiortc_multiple_stream_patch() -> None:
-    def _patched_route_rtp(self, packet) -> Optional[Any]:
-        ssrc_receiver = self.ssrc_table.get(packet.ssrc)
-
-        # the SSRC are known
-        if ssrc_receiver is not None:
-            return ssrc_receiver
-
-        pt_receiver = self.payload_type_table.get(packet.payload_type)
-
-        # the SSRC is unknown but the payload type matches, update the SSRC table
-        if ssrc_receiver is None and pt_receiver is not None:
-            self.ssrc_table[packet.ssrc] = pt_receiver
-            return pt_receiver
-
-        # discard the packet
-        return None
-
-    aiortc.rtcdtlstransport.RtpRouter.route_rtp = _patched_route_rtp
-
-aiortc_multiple_stream_patch()
-
 async def index(request):
     with (Path(__file__).parent / 'client/index.html').open() as f:
         return web.Response(content_type="text/html", text=f.read())
-
-async def javascript(request):
-    with (Path(__file__).parent / 'client/build/client.js').open() as f:
-        return web.Response(content_type="application/javascript", text=f.read())
     
 class OptionsWrapper:
     def __init__(self, raw_options):
         self.raw_options = raw_options
-
-    @property
-    def camera_type(self):
-        return self.raw_options.get('camera_type', 'rgb')
 
     @property
     def width(self):
@@ -105,7 +72,8 @@ async def offer(request):
 
         # RGB Camera
         camRgb = pipeline.create(dai.node.ColorCamera)
-        camRgb.setPreviewSize(640, 480)
+        # camRgb.setPreviewSize(640, 480)
+        camRgb.setPreviewSize(options.width, options.height)
         camRgb.setInterleaved(False)
         camRgb.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
         xoutRgb = pipeline.create(dai.node.XLinkOut)
@@ -119,12 +87,34 @@ async def offer(request):
         xoutDepth = pipeline.create(dai.node.XLinkOut)
         xoutDepth.setStreamName("depth")
 
-        monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
-        monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+        # monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+        # monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+        if options.mono_camera_resolution == 'THE_400_P':
+            monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+            monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)
+        elif options.mono_camera_resolution == 'THE_720_P':
+            monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_720_P)
+            monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_720_P)
+        elif options.mono_camera_resolution == 'THE_800_P':
+            monoLeft.setResolution(dai.MonoCameraProperties.SensorResolution.THE_800_P)
+            monoRight.setResolution(dai.MonoCameraProperties.SensorResolution.THE_800_P)
+
         monoLeft.setBoardSocket(dai.CameraBoardSocket.LEFT)
         monoRight.setBoardSocket(dai.CameraBoardSocket.RIGHT)
 
-        depth.setMedianFilter(dai.StereoDepthProperties.MedianFilter.KERNEL_7x7)
+        # depth.setMedianFilter(dai.StereoDepthProperties.MedianFilter.KERNEL_7x7)
+        if options.median_filter == 'MEDIAN_OFF':
+            depth.setMedianFilter(dai.StereoDepthProperties.MedianFilter.MEDIAN_OFF)
+        elif options.median_filter == 'KERNEL_3x3':
+            depth.setMedianFilter(dai.StereoDepthProperties.MedianFilter.KERNEL_3x3)
+        elif options.median_filter == 'KERNEL_5x5':
+            depth.setMedianFilter(dai.StereoDepthProperties.MedianFilter.KERNEL_5x5)
+        elif options.median_filter == 'KERNEL_7x7':
+            depth.setMedianFilter(dai.StereoDepthProperties.MedianFilter.KERNEL_7x7)
+
+        depth.setExtendedDisparity(options.extended_disparity)
+        depth.setSubpixel(options.subpixel)
+
         monoLeft.out.link(depth.left)
         monoRight.out.link(depth.right)
         depth.disparity.link(xoutDepth.input)
@@ -134,30 +124,17 @@ async def offer(request):
         request.app.depthQueue = request.app.device.getOutputQueue(name="depth", maxSize=4, blocking=False)
         request.app.depth = depth
 
-    # Add tracks for both RGB and Depth
-    # rgb_track = DepthAIVideoTransformTrack(request.app, pc_id, options, request.app.rgbQueue)
-    # depth_track = DepthAIDepthVideoTransformTrack(request.app, pc_id, options, request.app.depthQueue, request.app.depth)
-    # request.app.video_transforms[pc_id] = {"rgb": rgb_track, "depth": depth_track}
-
-    # for t in pc.getTransceivers():
-    #     if t.kind == "video":
-    # if options.camera_type == 'rgb':
-    # request.app.video_transforms[pc_id] = DepthAIVideoTransformTrack(request.app, pc_id, options)
+    # Adding RGB track
     rgb_track = DepthAIVideoTransformTrack(request.app, pc_id, options, request.app.rgbQueue)
     rgb_track.track_id = f"{pc_id}_rgb"
     request.app.video_transforms[pc_id] = rgb_track
-    # elif options.camera_type == 'depth':
-        # request.app.video_transforms[pc_id] = DepthAIDepthVideoTransformTrack(request.app, pc_id, options)
+    pc.addTrack(request.app.video_transforms[pc_id])
+
+    # Adding Depth track
     depth_track = DepthAIDepthVideoTransformTrack(request.app, pc_id, options, request.app.depthQueue, request.app.depth)
     depth_track.track_id = f"{pc_id}_depth"
     request.app.video_transforms[f"{pc_id}_depth"] = depth_track
-    pc.addTrack(request.app.video_transforms[pc_id])
     pc.addTrack(request.app.video_transforms[f"{pc_id}_depth"])
-
-    # self.assertEqual(pc.getSenders(), [video_sender1, video_sender2, audio_sender])
-    logger.info("Tracks %s", pc.getSenders())
-    logger.info("Transceivers %s", pc.getTransceivers())
-    # self.assertEqual(len(pc.getTransceivers()), 3)
 
     @pc.on("iceconnectionstatechange")
     async def on_iceconnectionstatechange():
@@ -194,7 +171,6 @@ if __name__ == "__main__":
     init_app(app)
     app.on_shutdown.append(on_shutdown)
     app.router.add_get("/", index)
-    app.router.add_get("/client.js", javascript)
     cors = aiohttp_cors.setup(app, defaults={
         "*": aiohttp_cors.ResourceOptions(
                 allow_credentials=True,

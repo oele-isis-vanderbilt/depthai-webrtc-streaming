@@ -1,5 +1,5 @@
 export interface WebRTCConfiguration {
-    camera_type: string;
+    // camera_type: string;
     cam_width: number;
     cam_height: number;
     nn_model: string;
@@ -15,7 +15,7 @@ export class WebRTC {
     };
 
     private props: WebRTCConfiguration = {
-        camera_type: 'rgb',
+        // camera_type: 'rgb',
         cam_width: 1920,
         cam_height: 1080,
         nn_model: '',
@@ -26,13 +26,10 @@ export class WebRTC {
     }
 
     private pc: RTCPeerConnection;
-    private mediaRecorder: MediaRecorder | null;
     private rgbRecorder: MediaRecorder | null = null;
     private depthRecorder: MediaRecorder | null = null;
-    private recordedChunks: Blob[];
     private rgbChunks: Blob[] = [];
     private depthChunks: Blob[] = [];
-    private trackCount = 0;
 
     private rgbStream: MediaStream | null = null;
     private depthStream: MediaStream | null = null;
@@ -42,8 +39,6 @@ export class WebRTC {
             this.props = props;
         }
         this.pc = new RTCPeerConnection(this.config);
-        this.mediaRecorder = null;
-        this.recordedChunks = [];
 
         this.pc.addEventListener('icegatheringstatechange', () => {
             console.log("[PC] ICE Gathering state:", this.pc.iceGatheringState);
@@ -122,30 +117,6 @@ export class WebRTC {
         this.pc.addTransceiver('video'); // RGB
         this.pc.addTransceiver('video'); // Depth
 
-        // this.pc.ontrack = (evt: RTCTrackEvent) => {
-        //     const stream = evt.streams[0];
-        //     const trackId = evt.track.id;
-        //     console.log(evt)
-        //     console.log("Received track:", evt.track.kind, "id:", trackId);
-        
-        //     // Simple heuristic based on MediaStreamTrack properties:
-        //     if (evt.track.kind === 'video') {
-        //         console.log("Video track:", evt.track.label);
-        //         console.log(this.rgbStream, this.depthStream, stream.id);
-        //         if (!this.rgbStream) {
-        //             console.log("Setting up RGB stream");
-        //             this.rgbStream = stream;
-        //             onRgbVideo(stream);
-        //             this.setupRecorder(stream, 'rgb');
-        //         } else if (!this.depthStream && stream.id !== this.rgbStream.id) {
-        //             console.log("Setting up Depth stream");
-        //             this.depthStream = stream;
-        //             onDepthVideo(stream);
-        //             this.setupRecorder(stream, 'depth');
-        //         }
-        //     }
-        // };
-
         this.pc.ontrack = (evt: RTCTrackEvent) => {
             console.log("Track received:", evt.track.kind, evt.track.id);
         
@@ -163,17 +134,6 @@ export class WebRTC {
                 }
             }
         };
-        
-        
-        // this.pc.addEventListener('track', evt => {
-        //     console.log(evt)
-        //     // if (evt.track.kind === 'video' && onVideo) {
-        //     //     this.setupRecording(evt.streams[0]);
-        //     //     onVideo(evt);
-        //     // } else if (evt.track.kind === 'audio' && onAudio) {
-        //     //     onAudio(evt);
-        //     // }
-        // });
     }
 
     private setupRecorder(stream: MediaStream, type: 'rgb' | 'depth') {
@@ -201,33 +161,3 @@ export class WebRTC {
         else this.depthRecorder = recorder;
     }
 }
-
-// export let dataChannel: RTCDataChannel;
-// export let webrtcInstance: WebRTC;
-
-// function onMessage(evt: MessageEvent) {
-//     const action = JSON.parse(evt.data);
-//     console.log(action);
-// }
-
-// export function start() {
-//     webrtcInstance = new WebRTC();
-//     dataChannel = webrtcInstance.createDataChannel(
-//         'pingChannel',
-//         () => console.log("[DC] closed"),
-//         () => console.log("[DC] opened"),
-//         onMessage
-//     );
-//     webrtcInstance.addMediaHandles(
-//         null,
-//         evt => ((document.getElementById('video') as HTMLVideoElement).srcObject = evt.streams[0])
-//     );
-//     webrtcInstance.start();
-// }
-
-// export function stop() {
-//     if (dataChannel) {
-//         dataChannel.send(JSON.stringify({ type: 'STREAM_CLOSED' }));
-//     }
-//     setTimeout(() => webrtcInstance.stop(), 100);
-// }
