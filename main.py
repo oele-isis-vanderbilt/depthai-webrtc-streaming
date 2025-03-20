@@ -151,7 +151,7 @@ async def offer(request):
     depth_track = DepthAIDepthVideoTransformTrack(request.app, pc_id, options, request.app.depthQueue, request.app.depth)
     depth_track.track_id = f"{pc_id}_depth"
     request.app.video_transforms[f"{pc_id}_depth"] = depth_track
-    # pc.addTrack(request.app.video_transforms[pc_id])
+    pc.addTrack(request.app.video_transforms[pc_id])
     pc.addTrack(request.app.video_transforms[f"{pc_id}_depth"])
 
     # self.assertEqual(pc.getSenders(), [video_sender1, video_sender2, audio_sender])

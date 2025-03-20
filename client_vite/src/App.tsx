@@ -39,13 +39,13 @@ const WebRTCControls: React.FC = () => {
             onMessage,
         );
         webrtcInstance.addMediaHandles(
-            null,
-            evt => {
-                const videoElement = document.getElementById('video') as HTMLVideoElement | null;
-                if (videoElement) {
-                    console.log(evt.streams)
-                    videoElement.srcObject = evt.streams[0];
-                }
+            (rgbStream) => {
+                const rgbVideo = document.getElementById('rgbVideo') as HTMLVideoElement;
+                rgbVideo.srcObject = rgbStream;
+            },
+            (depthStream) => {
+                const depthVideo = document.getElementById('depthVideo') as HTMLVideoElement;
+                depthVideo.srcObject = depthStream;
             }
         );
         webrtcInstance.start();
@@ -131,7 +131,15 @@ const WebRTCControls: React.FC = () => {
                 {/* <button id="ping" onClick={() => sendMessage({ type: 'ping' })}>Ping</button> */}
             </div>
 
-            <video id="video" autoPlay playsInline width={1920} height={1080}></video>
+            <div>
+                <h3>RGB Stream</h3>
+                <video id="rgbVideo" autoPlay playsInline width={1920} height={1080}></video>
+            </div>
+
+            <div>
+                <h3>Depth Stream</h3>
+                <video id="depthVideo" autoPlay playsInline width={1920} height={1080}></video>
+            </div>
         </div>
     );
 };

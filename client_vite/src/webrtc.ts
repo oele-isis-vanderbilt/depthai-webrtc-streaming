@@ -27,7 +27,15 @@ export class WebRTC {
 
     private pc: RTCPeerConnection;
     private mediaRecorder: MediaRecorder | null;
+    private rgbRecorder: MediaRecorder | null = null;
+    private depthRecorder: MediaRecorder | null = null;
     private recordedChunks: Blob[];
+    private rgbChunks: Blob[] = [];
+    private depthChunks: Blob[] = [];
+    private trackCount = 0;
+
+    private rgbStream: MediaStream | null = null;
+    private depthStream: MediaStream | null = null;
 
     constructor(props?: WebRTCConfiguration) {
         if (props) {
@@ -102,60 +110,95 @@ export class WebRTC {
     }
 
     stop() {
-        if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
-            this.mediaRecorder.stop();
-        }
+        this.rgbRecorder?.stop();
+        this.depthRecorder?.stop();
 
         this.pc.getTransceivers().forEach(transceiver => transceiver.stop?.());
         this.pc.getSenders().forEach(sender => sender.track?.stop());
         this.pc.close();
     }
 
-    addMediaHandles(
-        onAudio: ((evt: RTCTrackEvent) => void) | null,
-        onVideo: ((evt: RTCTrackEvent) => void) | null
-    ) {
-        if (onVideo) {
-            this.pc.addTransceiver("video"); // RGB
-            this.pc.addTransceiver("video"); // Depth
-        }
-        if (onAudio) {
-            this.pc.addTransceiver("audio");
-        }
+    addMediaHandles(onRgbVideo: (stream: MediaStream) => void, onDepthVideo: (stream: MediaStream) => void) {
+        this.pc.addTransceiver('video'); // RGB
+        this.pc.addTransceiver('video'); // Depth
 
-        this.pc.addEventListener('track', evt => {
-            console.log(evt)
-            if (evt.track.kind === 'video' && onVideo) {
-                this.setupRecording(evt.streams[0]);
-                onVideo(evt);
-            } else if (evt.track.kind === 'audio' && onAudio) {
-                onAudio(evt);
-            }
-        });
-    }
+        // this.pc.ontrack = (evt: RTCTrackEvent) => {
+        //     const stream = evt.streams[0];
+        //     const trackId = evt.track.id;
+        //     console.log(evt)
+        //     console.log("Received track:", evt.track.kind, "id:", trackId);
+        
+        //     // Simple heuristic based on MediaStreamTrack properties:
+        //     if (evt.track.kind === 'video') {
+        //         console.log("Video track:", evt.track.label);
+        //         console.log(this.rgbStream, this.depthStream, stream.id);
+        //         if (!this.rgbStream) {
+        //             console.log("Setting up RGB stream");
+        //             this.rgbStream = stream;
+        //             onRgbVideo(stream);
+        //             this.setupRecorder(stream, 'rgb');
+        //         } else if (!this.depthStream && stream.id !== this.rgbStream.id) {
+        //             console.log("Setting up Depth stream");
+        //             this.depthStream = stream;
+        //             onDepthVideo(stream);
+        //             this.setupRecorder(stream, 'depth');
+        //         }
+        //     }
+        // };
 
-    setupRecording(stream: MediaStream) {
-        this.mediaRecorder = new MediaRecorder(stream);
-
-        this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
-            if (event.data.size > 0) {
-                this.recordedChunks.push(event.data);
+        this.pc.ontrack = (evt: RTCTrackEvent) => {
+            console.log("Track received:", evt.track.kind, evt.track.id);
+        
+            if (evt.track.kind === 'video') {
+                const newStream = new MediaStream([evt.track]);
+        
+                if (!this.rgbStream) {
+                    this.rgbStream = newStream;
+                    onRgbVideo(this.rgbStream);
+                    this.setupRecorder(this.rgbStream, 'rgb');
+                } else if (!this.depthStream && evt.track.id !== this.rgbStream.getVideoTracks()[0].id) {
+                    this.depthStream = newStream;
+                    onDepthVideo(this.depthStream);
+                    this.setupRecorder(this.depthStream, 'depth');
+                }
             }
         };
+        
+        
+        // this.pc.addEventListener('track', evt => {
+        //     console.log(evt)
+        //     // if (evt.track.kind === 'video' && onVideo) {
+        //     //     this.setupRecording(evt.streams[0]);
+        //     //     onVideo(evt);
+        //     // } else if (evt.track.kind === 'audio' && onAudio) {
+        //     //     onAudio(evt);
+        //     // }
+        // });
+    }
 
-        this.mediaRecorder.onstop = () => {
-            const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+    private setupRecorder(stream: MediaStream, type: 'rgb' | 'depth') {
+        const recorder = new MediaRecorder(stream);
+        const chunks = type === 'rgb' ? this.rgbChunks : this.depthChunks;
+
+        recorder.ondataavailable = (event: BlobEvent) => {
+            if (event.data.size > 0) chunks.push(event.data);
+        };
+
+        recorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'video/webm' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.style.display = 'none';
             a.href = url;
-            a.download = `recorded-stream-${Date.now()}.webm`;
+            a.download = `${type}-stream-${Date.now()}.webm`;
             document.body.appendChild(a);
             a.click();
             URL.revokeObjectURL(url);
         };
 
-        this.mediaRecorder.start();
+        recorder.start();
+
+        if (type === 'rgb') this.rgbRecorder = recorder;
+        else this.depthRecorder = recorder;
     }
 }
 
