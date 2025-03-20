@@ -1,13 +1,38 @@
+export interface WebRTCConfiguration {
+    camera_type: string;
+    cam_width: number;
+    cam_height: number;
+    nn_model: string;
+    mono_camera_resolution: string;
+    median_filter: string;
+    subpixel: string;
+    extended_disparity: string;
+}
+
 export class WebRTC {
     private config: RTCConfiguration = {
         sdpSemantics: 'unified-plan',
     };
 
+    private props: WebRTCConfiguration = {
+        camera_type: 'rgb',
+        cam_width: 1920,
+        cam_height: 1080,
+        nn_model: '',
+        mono_camera_resolution: 'THE_400_P',
+        median_filter: 'KERNEL_7x7',
+        subpixel: '',
+        extended_disparity: '',
+    }
+
     private pc: RTCPeerConnection;
     private mediaRecorder: MediaRecorder | null;
     private recordedChunks: Blob[];
 
-    constructor() {
+    constructor(props?: WebRTCConfiguration) {
+        if (props) {
+            this.props = props;
+        }
         this.pc = new RTCPeerConnection(this.config);
         this.mediaRecorder = null;
         this.recordedChunks = [];
@@ -51,16 +76,7 @@ export class WebRTC {
             body: JSON.stringify({
                 sdp: this.pc.localDescription?.sdp,
                 type: this.pc.localDescription?.type,
-                options: {
-                    camera_type: 'rgb',
-                    cam_width: 1920,
-                    cam_height: 1080,
-                    nn_model: "",
-                    mono_camera_resolution: "THE_400_P",
-                    median_filter: "KERNEL_7x7",
-                    subpixel: "",
-                    extended_disparity: "",
-                }
+                options: this.props,
             }),
         });
 

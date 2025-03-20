@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { WebRTC } from './webrtc.ts'; // Adjust the import path as necessary
+import { WebRTC, WebRTCConfiguration } from './webrtc.ts'; // Adjust the import path as necessary
 
 // Create an interface for both the webrtcinstance and the data channel
 type WebRTCInstance = {
@@ -21,7 +21,17 @@ const WebRTCControls: React.FC = () => {
     }
 
     function start() {
-        const webrtcInstance = new WebRTC();
+        const config: WebRTCConfiguration = {
+            camera_type: "depth",
+            mono_camera_resolution: "THE_400_P",
+            median_filter: "KERNEL_7x7",
+            subpixel: "",
+            extended_disparity: "",
+            cam_width: 1920,
+            cam_height: 1080,
+            nn_model: ""
+        }
+        const webrtcInstance = new WebRTC(config);
         const dataChannel = webrtcInstance.createDataChannel(
             'pingChannel',
             () => console.log("[DC] closed"),
@@ -52,11 +62,6 @@ const WebRTCControls: React.FC = () => {
 
     return (
         <div>
-            <div>
-                <button id="start" onClick={() => start()}>Start</button>
-                <button id="stop" onClick={() => stop()}>Stop</button>
-                {/* <button id="ping" onClick={() => sendMessage({ type: 'ping' })}>Ping</button> */}
-            </div>
 
             <div>
                 <h2>Options</h2>
@@ -117,6 +122,12 @@ const WebRTCControls: React.FC = () => {
                         </div>
                     )}
                 </form>
+            </div>
+
+            <div>
+                <button id="start" onClick={() => start()}>Start</button>
+                <button id="stop" onClick={() => stop()}>Stop</button>
+                {/* <button id="ping" onClick={() => sendMessage({ type: 'ping' })}>Ping</button> */}
             </div>
 
             <video id="video" autoPlay playsInline width={1920} height={1080}></video>
