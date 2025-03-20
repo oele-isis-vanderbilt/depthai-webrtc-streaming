@@ -62,61 +62,64 @@ const WebRTCControls: React.FC = () => {
     };
 
     return (
-        <div>
+        <div className="flex flex-col w-full justify-center items-center">
+            
             <div>
-                <h2>Options</h2>
-                <form id="options-form">
-                    <div>
-                        <h1>RGB Configuration</h1>
-                        <div id="rgb_camera_options">
-                            <label htmlFor="cam_width">Cam width:</label>
-                            <input id="cam_width" name="cam_width" type="number" defaultValue={1920} />
+                <div>
+                    <h2>Options</h2>
+                    <form id="options-form">
+                        <div>
+                            <h1>RGB Configuration</h1>
+                            <div id="rgb_camera_options">
+                                <label htmlFor="cam_width">Cam width:</label>
+                                <input id="cam_width" name="cam_width" type="number" defaultValue={1920} />
 
-                            <label htmlFor="cam_height">Cam height:</label>
-                            <input id="cam_height" name="cam_height" type="number" defaultValue={1080} />
+                                <label htmlFor="cam_height">Cam height:</label>
+                                <input id="cam_height" name="cam_height" type="number" defaultValue={1080} />
 
-                            <label htmlFor="nn_model">Neural Network:</label>
-                            <select name="nn_model" id="nn_model">
-                                <option value="">--</option>
-                                <option value="age-gender-recognition-retail-0013">age-gender-recognition-retail-0013</option>
-                                <option value="face-detection-adas-0001">face-detection-adas-0001</option>
-                                <option value="face-detection-retail-0004">face-detection-retail-0004</option>
-                                <option value="mobilenet-ssd">mobilenet-ssd</option>
-                            </select>
+                                <label htmlFor="nn_model">Neural Network:</label>
+                                <select name="nn_model" id="nn_model">
+                                    <option value="">--</option>
+                                    <option value="age-gender-recognition-retail-0013">age-gender-recognition-retail-0013</option>
+                                    <option value="face-detection-adas-0001">face-detection-adas-0001</option>
+                                    <option value="face-detection-retail-0004">face-detection-retail-0004</option>
+                                    <option value="mobilenet-ssd">mobilenet-ssd</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <h1>Depth Configuration</h1>
-                        <div id="depth_options">
-                            <label htmlFor="mono_camera_resolution">Mono Camera Resolution:</label>
-                            <select name="mono_camera_resolution" id="mono_camera_resolution" defaultValue="THE_400_P">
-                                <option value="THE_400_P">THE_400_P</option>
-                                <option value="THE_720_P">THE_720_P</option>
-                                <option value="THE_800_P">THE_800_P</option>
-                            </select>
+                        <div>
+                            <h1>Depth Configuration</h1>
+                            <div id="depth_options">
+                                <label htmlFor="mono_camera_resolution">Mono Camera Resolution:</label>
+                                <select name="mono_camera_resolution" id="mono_camera_resolution" defaultValue="THE_400_P">
+                                    <option value="THE_400_P">THE_400_P</option>
+                                    <option value="THE_720_P">THE_720_P</option>
+                                    <option value="THE_800_P">THE_800_P</option>
+                                </select>
 
-                            <label htmlFor="median_filter">Median Filter:</label>
-                            <select name="median_filter" id="median_filter" defaultValue="KERNEL_7x7">
-                                <option value="MEDIAN_OFF">MEDIAN_OFF</option>
-                                <option value="KERNEL_3x3">KERNEL_3x3</option>
-                                <option value="KERNEL_5x5">KERNEL_5x5</option>
-                                <option value="KERNEL_7x7">KERNEL_7x7</option>
-                            </select>
+                                <label htmlFor="median_filter">Median Filter:</label>
+                                <select name="median_filter" id="median_filter" defaultValue="KERNEL_7x7">
+                                    <option value="MEDIAN_OFF">MEDIAN_OFF</option>
+                                    <option value="KERNEL_3x3">KERNEL_3x3</option>
+                                    <option value="KERNEL_5x5">KERNEL_5x5</option>
+                                    <option value="KERNEL_7x7">KERNEL_7x7</option>
+                                </select>
 
-                            <input type="checkbox" id="subpixel" name="subpixel" />
-                            <label htmlFor="subpixel">Subpixel</label>
+                                <input type="checkbox" id="subpixel" name="subpixel" />
+                                <label htmlFor="subpixel">Subpixel</label>
 
-                            <input type="checkbox" id="extended_disparity" name="extended_disparity" />
-                            <label htmlFor="extended_disparity">Extended disparity</label>
+                                <input type="checkbox" id="extended_disparity" name="extended_disparity" />
+                                <label htmlFor="extended_disparity">Extended disparity</label>
+                            </div>
                         </div>
-                    </div>
-                </form>
-            </div>
+                    </form>
+                </div>
 
-            <div>
-                <button id="start" onClick={start}>Start</button>
-                <button id="stop" onClick={stop}>Stop</button>
+                <div>
+                    <button id="start" onClick={start}>Start</button>
+                    <button id="stop" onClick={stop}>Stop</button>
+                </div>
             </div>
 
             <div className="flex flex-row space-x-4 justify-center items-center">
