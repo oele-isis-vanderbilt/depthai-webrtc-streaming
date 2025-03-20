@@ -116,13 +116,15 @@ export class WebRTC {
         onVideo: ((evt: RTCTrackEvent) => void) | null
     ) {
         if (onVideo) {
-            this.pc.addTransceiver("video");
+            this.pc.addTransceiver("video"); // RGB
+            this.pc.addTransceiver("video"); // Depth
         }
         if (onAudio) {
             this.pc.addTransceiver("audio");
         }
 
         this.pc.addEventListener('track', evt => {
+            console.log(evt)
             if (evt.track.kind === 'video' && onVideo) {
                 this.setupRecording(evt.streams[0]);
                 onVideo(evt);
@@ -157,32 +159,32 @@ export class WebRTC {
     }
 }
 
-export let dataChannel: RTCDataChannel;
-export let webrtcInstance: WebRTC;
+// export let dataChannel: RTCDataChannel;
+// export let webrtcInstance: WebRTC;
 
-function onMessage(evt: MessageEvent) {
-    const action = JSON.parse(evt.data);
-    console.log(action);
-}
+// function onMessage(evt: MessageEvent) {
+//     const action = JSON.parse(evt.data);
+//     console.log(action);
+// }
 
-export function start() {
-    webrtcInstance = new WebRTC();
-    dataChannel = webrtcInstance.createDataChannel(
-        'pingChannel',
-        () => console.log("[DC] closed"),
-        () => console.log("[DC] opened"),
-        onMessage
-    );
-    webrtcInstance.addMediaHandles(
-        null,
-        evt => ((document.getElementById('video') as HTMLVideoElement).srcObject = evt.streams[0])
-    );
-    webrtcInstance.start();
-}
+// export function start() {
+//     webrtcInstance = new WebRTC();
+//     dataChannel = webrtcInstance.createDataChannel(
+//         'pingChannel',
+//         () => console.log("[DC] closed"),
+//         () => console.log("[DC] opened"),
+//         onMessage
+//     );
+//     webrtcInstance.addMediaHandles(
+//         null,
+//         evt => ((document.getElementById('video') as HTMLVideoElement).srcObject = evt.streams[0])
+//     );
+//     webrtcInstance.start();
+// }
 
-export function stop() {
-    if (dataChannel) {
-        dataChannel.send(JSON.stringify({ type: 'STREAM_CLOSED' }));
-    }
-    setTimeout(() => webrtcInstance.stop(), 100);
-}
+// export function stop() {
+//     if (dataChannel) {
+//         dataChannel.send(JSON.stringify({ type: 'STREAM_CLOSED' }));
+//     }
+//     setTimeout(() => webrtcInstance.stop(), 100);
+// }

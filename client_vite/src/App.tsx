@@ -43,6 +43,7 @@ const WebRTCControls: React.FC = () => {
             evt => {
                 const videoElement = document.getElementById('video') as HTMLVideoElement | null;
                 if (videoElement) {
+                    console.log(evt.streams)
                     videoElement.srcObject = evt.streams[0];
                 }
             }
