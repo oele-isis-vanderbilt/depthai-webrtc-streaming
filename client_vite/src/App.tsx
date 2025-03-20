@@ -119,7 +119,7 @@ const WebRTCControls: React.FC = () => {
                 </form>
             </div>
 
-            <video id="video" autoPlay playsInline></video>
+            <video id="video" autoPlay playsInline width={1920} height={1080}></video>
         </div>
     );
 };

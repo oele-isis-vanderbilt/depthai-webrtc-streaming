@@ -26,40 +26,46 @@ export class WebRTC {
     }
 
     async negotiate() {
-        try {
-            const offer = await this.pc.createOffer();
-            await this.pc.setLocalDescription(offer);
+        const offer = await this.pc.createOffer();
+        await this.pc.setLocalDescription(offer);
 
-            await new Promise<void>((resolve) => {
-                if (this.pc.iceGatheringState === 'complete') {
-                    resolve();
-                } else {
-                    const checkState = () => {
-                        if (this.pc.iceGatheringState === 'complete') {
-                            this.pc.removeEventListener('icegatheringstatechange', checkState);
-                            resolve();
-                        }
-                    };
+        await new Promise<void>((resolve) => {
+            if (this.pc.iceGatheringState === 'complete') {
+                resolve();
+            } else {
+                const checkState = () => {
+                    if (this.pc.iceGatheringState === 'complete') {
+                        this.pc.removeEventListener('icegatheringstatechange', checkState);
+                        resolve();
+                    }
+                };
 
-                    this.pc.addEventListener('icegatheringstatechange', checkState);
+                this.pc.addEventListener('icegatheringstatechange', checkState);
+            }
+        });
+
+        // Make the request to a different URL at http://localhost:8081/offer
+        const response = await fetch(`${import.meta.env.VITE_DEPTHAI_SERVER_URL}/offer`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sdp: this.pc.localDescription?.sdp,
+                type: this.pc.localDescription?.type,
+                options: {
+                    camera_type: 'rgb',
+                    cam_width: 1920,
+                    cam_height: 1080,
+                    nn_model: "",
+                    mono_camera_resolution: "THE_400_P",
+                    median_filter: "KERNEL_7x7",
+                    subpixel: "",
+                    extended_disparity: "",
                 }
-            });
+            }),
+        });
 
-            // Make the request to a different URL at http://localhost:8081/offer
-            const response = await fetch('http://localhost:8081/offer', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sdp: this.pc.localDescription?.sdp,
-                    type: this.pc.localDescription?.type,
-                }),
-            });
-
-            const answer = await response.json();
-            await this.pc.setRemoteDescription(answer);
-        } catch (e) {
-            alert(e);
-        }
+        const answer = await response.json();
+        await this.pc.setRemoteDescription(answer);
     }
 
     start() {
