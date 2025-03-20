@@ -1,54 +1,52 @@
-# Gen2 WebRTC streaming example
+# DepthAI WebRTC Dashboard
 
-This example demonstrates how to setup a WebRTC server to configure the device and stream the results and preview from it.
+This dashboard is an extension from [DepthAI experiments repo](https://github.com/luxonis/depthai-experiments/tree/master/gen2-webrtc-streaming) with the following modifications:
+1. Streaming both RGB and Depth videos simulatenously
+2. Recording the incoming video streams
+3. Using Vite+React+TS for the client instead of vanilla JS
 
 ## Demo
 
 [![Gen2 WebRTC](https://user-images.githubusercontent.com/5244214/121884542-58a1bf00-cd13-11eb-851d-dc45d541e385.gif)](https://youtu.be/8aeqGgO8LjY)
 
-## Pre-requisites
+## Docker
 
-Install requirements:
-```
-python3 -m pip install -r requirements.txt
-```
+The best way to run the application is via Docker. Please install Docker for your operating system and then run the following command:
 
-[Enable insecure origins to be treated as secure (Chrome)](https://stackoverflow.com/a/58449078/5494277)
-
-   > To ignore Chrome’s secure origin policy, follow these steps. Navigate to chrome://flags/#unsafely-treat-insecure-origin-as-secure in Chrome.  
-   > Find and enable the Insecure origins treated as secure section (see below). Add any addresses you want to ignore the secure origin policy for. Remember to include the port number too (if required). 
-   ![example](https://i.stack.imgur.com/8HpYF.png)
-   > Save and restart Chrome. 
-   > Remember this is for dev purposes only. The live working app will need to be hosted on https.
-
-## Usage
-
-```
-python3 main.py
+```bash
+docker-compose up --build
 ```
 
-And open [`http://0.0.0.0:8080`](http://0.0.0.0:8080)
+Then you should be able to visit the dashboard in the browser at ``http://localhost:5173``.
 
-![localhost preview](https://user-images.githubusercontent.com/5244214/121889877-03b57700-cd1a-11eb-945c-7a4fe5ed29f1.png)
+## Development & Contributing
 
-## Modify the script
+To make changes to the client or server, you will need to run the two services natively. Running the server is performed with the following command within the ``server`` directory:
 
-DepthAI part of the code is stored in `transformators.py`, as `DepthAIVideoTransformTrack`.
-You can add more capabilities there, like modify the pipeline or output.
-
-If you'd like to send the nn results using datachannel, please use the following snippet inside `get_frame` method of the transformator
-
-```python
-if self.pc_id in self.application.pcs_datachannels:
-    channel = self.application.pcs_datachannels[self.pc_id]
-    channel.send(json.dumps({
-        'type': 'NEW_RESULTS',
-        'payload': [] # your results array here
-    }))
-
+```bash
+$ python main.py
+======== Running on http://0.0.0.0:8081 ========
+(Press CTRL+C to quit)\
 ```
 
-If you'd like to add more config options to the script, first add a new input with a correct `name` attribute
-to `client/index.html` inside `#options-form`. It will be automatically parsed and sent to the server.
-There, you can access them in the transformer by either referncing `self.options.raw_options.get("<name_attribute>")`
-or by adding a new property in `OptionsWrapper` class
+This should start a server at port 8080 or 8081 (depending on availability). Create a ``.env`` file providing the client information about where the server is located, like such:
+
+```bash
+# .env within the client directory
+VITE_DEPTHAI_SERVER_URL=http://localhost:8081
+```
+
+Now to run the client with the following command while within the ``client`` directory:
+
+```bash
+$ npm run install
+$ npm run dev
+
+  VITE v6.2.2  ready in 298 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+```
+
+Now you should be able to access the DepthAI dashboard with the URL provided by Vite.

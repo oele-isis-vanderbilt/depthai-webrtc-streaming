@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./server
+    privileged: true
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    environment:
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+      - /tmp/.X11-unix:/tmp/.X11-unix
+    ports:
+      - "8081:8081"
+    networks:
+      - app-network
+    restart: always
+
+  frontend:
+    build:
+      context: ./client
+    ports:
+      - "5173:5173"
+    networks:
+      - app-network
+    depends_on:
+      - backend
+    environment:
+      - VITE_DEPTHAI_SERVER_URL=http://backend:8081
+
+networks:
+  app-network:

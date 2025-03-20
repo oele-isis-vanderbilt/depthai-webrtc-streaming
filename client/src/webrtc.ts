@@ -10,9 +10,9 @@ export interface WebRTCConfiguration {
 }
 
 export class WebRTC {
-    private config: RTCConfiguration = {
-        sdpSemantics: 'unified-plan',
-    };
+    // private config: RTCConfiguration = {
+    //     sdpSemantics: 'unified-plan',
+    // };
 
     private props: WebRTCConfiguration = {
         // camera_type: 'rgb',
@@ -38,7 +38,8 @@ export class WebRTC {
         if (props) {
             this.props = props;
         }
-        this.pc = new RTCPeerConnection(this.config);
+        // this.pc = new RTCPeerConnection(this.config);
+        this.pc = new RTCPeerConnection();
 
         this.pc.addEventListener('icegatheringstatechange', () => {
             console.log("[PC] ICE Gathering state:", this.pc.iceGatheringState);
