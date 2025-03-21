@@ -4,6 +4,7 @@ This dashboard is an extension from [DepthAI experiments repo](https://github.co
 1. Streaming both RGB and Depth videos simulatenously
 2. Recording the incoming video streams
 3. Using Vite+React+TS for the client instead of vanilla JS
+4. Depth + RGB Alignment as described in [tutorial](https://docs.luxonis.com/software/depthai/examples/rgb_depth_aligned/) and [code](https://gist.github.com/Erol444/25f374fa18efa7939ec9bb848b39249a)
 
 ## Demo
 

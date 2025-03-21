@@ -114,6 +114,9 @@ async def offer(request):
 
         depth.setExtendedDisparity(options.extended_disparity)
         depth.setSubpixel(options.subpixel)
+        depth.setLeftRightCheck(True)
+        depth.setDepthAlign(dai.CameraBoardSocket.RGB)
+        depth.setOutputSize(options.width, options.height)
 
         monoLeft.out.link(depth.left)
         monoRight.out.link(depth.right)
